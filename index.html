@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lavony Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --grape: #6f2da8; --orchid: #da70d6; --lavender: #e6e6fa; --seagreen: #2e8b57; --white: #ffffff;
+  --bg-grad: linear-gradient(135deg, var(--grape), var(--orchid), var(--seagreen), var(--white));
+  --glass: rgba(255, 255, 255, 0.35);
+  --text: #333; --header-text: #ffffff;
+  --input-bg: rgba(255, 255, 255, 0.5);
+}
+
+body.dark {
+  --bg-grad: linear-gradient(135deg, #1a0b2e, #31135e, #0d1b15, #000000);
+  --glass: rgba(30, 20, 50, 0.7);
+  --text: #f1f1f1; --header-text: var(--orchid);
+  --input-bg: rgba(50, 30, 80, 0.6);
+}
+
+/* MOODS */
+body.mood-sunset { --bg-grad: linear-gradient(135deg, #ff9a9e, #fad0c4, #fad0c4, #ffd1ff); }
+body.mood-ocean { --bg-grad: linear-gradient(135deg, #4facfe, #00f2fe, #43e97b, #ffffff); }
+body.mood-forest { --bg-grad: linear-gradient(135deg, var(--seagreen), #96e6a1, #d4fc79, var(--white)); }
+
+*{box-sizing:border-box;}
+html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
+
+body {
+  font-family:'Poppins',sans-serif; 
+  background: var(--bg-grad);
+  background-size: 400% 400%;
+  animation: gradientMove 15s ease infinite;
+  transition: background 1s ease, color 0.5s ease;
+  color: var(--text);
+}
+
+@keyframes gradientMove{ 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+
+#app-scroller {
+  width: 100%; height: 100vh;
+  overflow-y: auto; overflow-x: hidden;
+  display: none; position: relative;
+  scrollbar-width: none;
+}
+#app-scroller::-webkit-scrollbar { display: none; }
+
+#sparkle-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 9999; }
+
+/* RESPONSIVE INTRO */
+#intro {
+  position:fixed; inset:0; background: linear-gradient(135deg, var(--grape), var(--orchid));
+  display:flex; flex-direction:column; justify-content:center; align-items:center; 
+  color:white; z-index:20000; text-align: center; padding: 20px; transition: 0.8s;
+}
+#intro h1 { 
+  font-size: clamp(42px, 12vw, 82px); font-weight: 800; margin: 0; 
+  text-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: titleFloat 3s ease-in-out infinite; 
+}
+@keyframes titleFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+
+/* BUTTONS */
+button, .toggle-btn, .secret-btn, #intro button {
+  border: 1px solid rgba(255,255,255,0.4); border-radius: 30px; 
+  padding: 12px 25px; cursor: pointer; font-weight: 600; transition: 0.3s;
+}
+#intro button { background: var(--white); color: var(--grape); margin-top: 30px; border: none; }
+.toggle-btn { background: var(--lavender); color: var(--grape); }
+.secret-btn { background: var(--orchid); color: white; border: none; }
+
+.mood-bar { display: flex; gap: 10px; align-items: center; background: var(--glass); padding: 8px 15px; border-radius: 40px; border: 1px solid rgba(255,255,255,0.2); }
+.mood-dot { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; border: 2px solid white; transition: 0.3s; }
+
+header{ text-align:center; padding:60px 20px 20px; color: var(--header-text); }
+header h2{ font-size: clamp(30px, 5vw, 48px); font-weight:700; margin-bottom: 20px; }
+
+.top-bar{ display:flex; justify-content:center; gap:12px; flex-wrap:wrap; align-items: center; padding: 0 10px; }
+input[type=text], select { padding:12px 20px; border-radius:30px; border:none; outline:none; background:var(--input-bg); color:var(--text); }
+
+.board{ width:95%; max-width:1300px; margin:40px auto; display:flex; flex-wrap:wrap; gap:25px; justify-content:center; }
+.note{ 
+  width: 300px; height: 280px; padding:20px; border-radius:25px; 
+  backdrop-filter:blur(20px); background:var(--glass); 
+  border: 1px solid rgba(255,255,255,0.1); display:flex; flex-direction:column; transition:0.4s; 
+}
+.note.rose { background: rgba(218, 112, 214, 0.4); }
+.note.mint { background: rgba(46, 139, 87, 0.3); }
+.note.sky  { background: rgba(230, 230, 250, 0.6); }
+
+textarea{ border:none; background:transparent; resize:none; outline:none; flex:1; color:var(--text); font-family: inherit; font-size: 15px; }
+.note-footer{ display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-top:10px; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 10px;}
+.note-actions { display: flex; gap: 12px; font-size: 18px; }
+.note-actions span { cursor: pointer; }
+
+footer { text-align: center; padding: 60px 20px 120px; font-size: 13px; color: var(--header-text); }
+.add-btn{ 
+    position:fixed; bottom:30px; right:30px; width:65px; height:65px; border-radius:50%; 
+    background: var(--seagreen); color:white; font-size:30px; border: none; cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 1000;
+}
+</style>
+</head>
+<body>
+
+<canvas id="sparkle-canvas"></canvas>
+
+<div id="intro">
+  <h1>Lavony Notes</h1>
+  <p>For your thoughts, dreams, and everything in between.</p>
+  <button onclick="enterApp()">Enter</button>
+</div>
+
+<div id="app-scroller">
+  <header>
+    <h2 id="greeting">Lavony Notes</h2>
+    <div class="top-bar">
+      <input type="text" id="search" placeholder="Search notes...">
+      <button class="toggle-btn" onclick="toggleDark()">🌙</button>
+      <div class="mood-bar">
+        <div class="mood-dot" style="background: #6f2da8;" onclick="setMood('')"></div>
+        <div class="mood-dot" style="background: #ff9a9e;" onclick="setMood('mood-sunset')"></div>
+        <div class="mood-dot" style="background: #4facfe;" onclick="setMood('mood-ocean')"></div>
+        <div class="mood-dot" style="background: #2e8b57;" onclick="setMood('mood-forest')"></div>
+      </div>
+      <button class="secret-btn" onclick="revealSecret()">Secret ✨</button>
+    </div>
+    <div id="secret-display" style="text-align: center; height: 30px; margin-top: 10px; font-weight: 600;"></div>
+  </header>
+
+  <div class="board" id="board"></div>
+  
+  <footer>
+    Designed with Laziness by <a href="https://github.com/Cyber-Mood/" style="color: inherit;">Sloth 🦥</a>
+  </footer>
+
+  <button class="add-btn" onclick="addNote()">+</button>
+</div>
+
+<script>
+const board=document.getElementById("board");
+const searchInput=document.getElementById("search");
+const secretDisplay=document.getElementById("secret-display");
+const canvas = document.getElementById("sparkle-canvas");
+const ctx = canvas.getContext("2d");
+
+let notes=JSON.parse(localStorage.getItem("lavonyNotesFinal_v2"))||[];
+let particles = [];
+
+// THEME & MOOD
+function setMood(mood) {
+  const isDark = document.body.classList.contains('dark');
+  document.body.className = mood;
+  if(isDark) document.body.classList.add('dark');
+}
+
+function toggleDark(){ 
+    document.body.classList.toggle("dark"); 
+    document.querySelector(".toggle-btn").textContent = document.body.classList.contains("dark") ? "☀️" : "🌙";
+}
+
+// APP FLOW
+function enterApp(){
+  document.getElementById("intro").style.opacity="0";
+  setTimeout(()=>{
+    document.getElementById("intro").style.display="none";
+    document.getElementById("app-scroller").style.display="block";
+    updateGreeting();
+    render();
+  },600);
+}
+
+function updateGreeting() {
+  const hr = new Date().getHours();
+  let g = "Good evening, Lavony 🌙";
+  if (hr < 12) g = "Good morning, Lavony ☀️";
+  else if (hr < 18) g = "Good afternoon, Lavony ✨";
+  document.getElementById("greeting").textContent = g;
+}
+
+// NOTE CORE LOGIC
+function save(){ localStorage.setItem("lavonyNotesFinal_v2", JSON.stringify(notes)); }
+
+function addNote(){
+  const id = Date.now();
+  notes.push({id, text: "", color: "", pinned: false, date: new Date().toLocaleString()});
+  render();
+  save();
+}
+
+function render(){
+  board.innerHTML="";
+  const val = searchInput.value.toLowerCase();
+  
+  // Sort: Pinned first, then newest
+  const sorted = [...notes].sort((a,b) => {
+    if(a.pinned && !b.pinned) return -1;
+    if(!a.pinned && b.pinned) return 1;
+    return b.id - a.id;
+  });
+
+  sorted.forEach(n => {
+    if(n.text.toLowerCase().includes(val)) createNoteUI(n);
+  });
+}
+
+function createNoteUI(n){
+  const div = document.createElement("div");
+  div.className = `note ${n.color}`;
+  
+  const tx = document.createElement("textarea");
+  tx.value = n.text;
+  tx.placeholder = "Write a thought...";
+  tx.oninput = (e) => { n.text = e.target.value; save(); };
+
+  const footer = document.createElement("div");
+  footer.className = "note-footer";
+  footer.innerHTML = `<span style="opacity:0.6">${n.date}</span>`;
+
+  const actions = document.createElement("div");
+  actions.className = "note-actions";
+
+  const pal = document.createElement("span"); pal.textContent = "🎨";
+  pal.onclick = () => {
+    const c = ["", "rose", "mint", "sky"];
+    n.color = c[(c.indexOf(n.color)+1)%c.length];
+    render(); save();
+  };
+
+  const pin = document.createElement("span"); pin.textContent = n.pinned ? "📌" : "📍";
+  pin.onclick = (e) => {
+    if(!n.pinned) createSparkles(e.clientX, e.clientY);
+    n.pinned = !n.pinned;
+    render(); save();
+  };
+
+  const del = document.createElement("span"); del.textContent = "🗑️";
+  del.onclick = () => { 
+    notes = notes.filter(x => x.id !== n.id); 
+    render(); save(); 
+  };
+
+  actions.append(pal, pin, del);
+  footer.append(actions);
+  div.append(tx, footer);
+  board.append(div);
+}
+
+// SPARKLES
+function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+class Particle {
+  constructor(x, y) {
+    this.x = x; this.y = y;
+    this.size = Math.random() * 4 + 1;
+    this.speedX = Math.random() * 6 - 3;
+    this.speedY = Math.random() * 6 - 3;
+    this.color = `hsl(${Math.random() * 60 + 280}, 80%, 80%)`;
+    this.life = 1;
+  }
+  update() { this.x += this.speedX; this.y += this.speedY; this.life -= 0.02; }
+  draw() {
+    ctx.fillStyle = this.color; ctx.globalAlpha = this.life;
+    ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+  }
+}
+function createSparkles(x, y) { for(let i=0; i<15; i++) particles.push(new Particle(x, y)); }
+function animate() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  particles = particles.filter(p => p.life > 0);
+  particles.forEach(p => { p.update(); p.draw(); });
+  requestAnimationFrame(animate);
+}
+animate();
+
+// SEARCH & SECRET
+searchInput.oninput = render;
+function revealSecret(){
+  secretDisplay.textContent = "If you are reading this,... cook and feed me biryani.";
+  secretDisplay.style.color = document.body.classList.contains('dark') ? 'var(--orchid)' : 'white';
+  setTimeout(() => secretDisplay.textContent = "", 4000);
+}
+</script>
+</body>
+</html>
